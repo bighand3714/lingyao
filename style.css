@@ -428,8 +428,8 @@ button { font-family: inherit; cursor: pointer; }
 .tab-content { display: flex; flex-direction: column; gap: 8px; min-height: 120px; }
 .tab-content.hidden { display: none; }
 
-/* 背包/商店行 */
-.bag-row, .shop-row {
+/* 商店行：双行布局（第一行物品信息，第二行按钮靠右） */
+.bag-row {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -437,6 +437,21 @@ button { font-family: inherit; cursor: pointer; }
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 8px 12px;
+}
+.shop-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--panel-light);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.shop-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
 }
 .bag-emoji { font-size: 22px; flex: 0 0 auto; }
 .bag-name { font-weight: bold; font-size: 0.95rem; flex: 0 0 auto; }
@@ -452,7 +467,7 @@ button { font-family: inherit; cursor: pointer; }
   border-bottom: 1px dashed var(--border);
   padding-bottom: 4px;
 }
-.shop-btns { display: flex; gap: 6px; flex: 0 0 auto; }
+.shop-btns { display: flex; justify-content: flex-end; gap: 6px; }
 .shop-btn {
   padding: 5px 10px;
   font-size: 0.8rem;

@@ -345,9 +345,11 @@ export function initUI(game) {
         const sell = materialSellPrice(m)
         return `
         <div class="shop-row">
-          <span class="bag-emoji">${unlocked ? m.emoji : '🔒'}</span>
-          <span class="bag-name ${tierClass(m.tier)}">${unlocked ? m.name : '？？？'}</span>
-          <span class="bag-sub">持有×${game.count(m.id)}</span>
+          <div class="shop-info">
+            <span class="bag-emoji">${unlocked ? m.emoji : '🔒'}</span>
+            <span class="bag-name ${tierClass(m.tier)}">${unlocked ? m.name : '？？？'}</span>
+            <span class="bag-sub">持有×${game.count(m.id)}</span>
+          </div>
           <div class="shop-btns">
             <button class="shop-btn buy" data-act="buy" data-id="${m.id}" ${unlocked ? '' : 'disabled'}>买 ${buy}💰</button>
             <button class="shop-btn sell" data-act="sell" data-id="${m.id}" ${game.count(m.id) > 0 ? '' : 'disabled'}>卖 ${sell}💰</button>
@@ -384,9 +386,11 @@ export function initUI(game) {
           const sell = pillSellPrice({ grade, baseGrade: info.baseGrade })
           return `
           <div class="shop-row">
-            <span class="bag-emoji">${info.emoji}</span>
-            <span class="bag-name q${grade}">${info.name}</span>
-            <span class="bag-sub q${grade}">${QUALITY_NAMES[grade]} · ×${game.pillCount(key)}</span>
+            <div class="shop-info">
+              <span class="bag-emoji">${info.emoji}</span>
+              <span class="bag-name q${grade}">${info.name}</span>
+              <span class="bag-sub q${grade}">${QUALITY_NAMES[grade]} · ×${game.pillCount(key)}</span>
+            </div>
             <div class="shop-btns">
               <button class="shop-btn sell" data-key="${key}">卖 ${sell}💰</button>
             </div>
@@ -400,9 +404,11 @@ export function initUI(game) {
           const buy = pillBuyPrice(info)
           return `
           <div class="shop-row">
-            <span class="bag-emoji">${info.emoji}</span>
-            <span class="bag-name q${grade}">${info.name}</span>
-            <span class="bag-sub q${grade}">${QUALITY_NAMES[grade]}</span>
+            <div class="shop-info">
+              <span class="bag-emoji">${info.emoji}</span>
+              <span class="bag-name q${grade}">${info.name}</span>
+              <span class="bag-sub q${grade}">${QUALITY_NAMES[grade]}</span>
+            </div>
             <div class="shop-btns">
               <button class="shop-btn buy" data-buy="${info.id}">买 ${buy}💰</button>
             </div>
@@ -439,9 +445,11 @@ export function initUI(game) {
           const price = codexPrice(r)
           return `
           <div class="shop-row">
-            <span class="bag-emoji">❓</span>
-            <span class="bag-name">？？？</span>
-            <span class="bag-sub">传闻需 ${r.materials.map(id => MATERIALS[id].name).join('、')}</span>
+            <div class="shop-info">
+              <span class="bag-emoji">❓</span>
+              <span class="bag-name">？？？</span>
+              <span class="bag-sub">传闻需 ${r.materials.map(id => MATERIALS[id].name).join('、')}</span>
+            </div>
             <div class="shop-btns">
               <button class="shop-btn buy" data-codex="${r.id}">打听 ${price}💰</button>
             </div>
