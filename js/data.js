@@ -125,11 +125,11 @@ export const JUDGE_ZONES = {
 
 export const JUDGE_SCORES = { perfect: 3, good: 2, normal: 1, fail: 0 }
 
-// 三段判定配置：投炉 / 控火 / 出锅 的摆动周期（秒）
+// 三段判定配置：投炉 / 控火 / 出锅 的摆动周期（秒，数值越大越慢）
 export const JUDGE_STAGES = [
-  { id: 'throwing', name: '投炉时机', period: 0.8, hint: '何时将素材投入炉中？' },
-  { id: 'fire',     name: '控火时机', period: 0.55, hint: '火候到不到位？' },
-  { id: 'done',     name: '出锅时机', period: 0.4, hint: '丹成之际，把握时机！' },
+  { id: 'throwing', name: '投炉时机', period: 1.2, hint: '何时将素材投入炉中？' },
+  { id: 'fire',     name: '控火时机', period: 0.85, hint: '火候到不到位？' },
+  { id: 'done',     name: '出锅时机', period: 0.65, hint: '丹成之际，把握时机！' },
 ]
 
 // 失误 ≥2 段即爆炉
