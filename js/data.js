@@ -108,10 +108,11 @@ export const RECIPES = {
 }
 
 // ---------- 随机丹药模板（组合不匹配配方时生成） ----------
+// id 用于背包存储（配合品阶组成 key，如 "random_dan@2"）
 export const RANDOM_PILL_POOL = [
-  { name: '杂丹', emoji: '🫙', effect: '药性驳杂，聊胜于无' },
-  { name: '回气散', emoji: '🫙', effect: '微微回复灵力' },
-  { name: '凝神丸', emoji: '🫙', effect: '清心凝神，杂念不生' },
+  { id: 'random_dan',  name: '杂丹',  emoji: '🫙', effect: '药性驳杂，聊胜于无', baseGrade: 1 },
+  { id: 'huiqi_san',   name: '回气散', emoji: '🫙', effect: '微微回复灵力', baseGrade: 1 },
+  { id: 'ningshen_wan', name: '凝神丸', emoji: '🫙', effect: '清心凝神，杂念不生', baseGrade: 1 },
 ]
 
 // ---------- 判定区间（0~100） ----------

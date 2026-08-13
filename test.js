@@ -3,7 +3,9 @@
 // ============================================================
 
 import { judgeScore, matchRecipe, resolveResult, calcGrade } from './js/judge.js'
-import { RECIPES } from './js/data.js'
+import { RECIPES, MATERIALS } from './js/data.js'
+import { materialBuyPrice, materialSellPrice, pillSellPrice, pillBuyPrice, codexPrice } from './js/economy.js'
+import { pillKey } from './js/game.js'
 
 let pass = 0
 let fail = 0
@@ -54,6 +56,53 @@ for (const r of Object.values(RECIPES)) {
   const ok = r.materials.every(id => !!id)
   assert(ok, `配方 ${r.id} 素材 id 有效`)
 }
+
+console.log('【经济：价格计算】')
+assert(materialBuyPrice(MATERIALS.lingzhi) === 24, '灵芝买价 = 1*15+3*3 = 24')
+assert(materialSellPrice(MATERIALS.lingzhi) === 12, '灵芝卖价 = 24/2 = 12')
+assert(materialBuyPrice(MATERIALS.longlin) === 111, '龙鳞买价 = 5*15+12*3 = 111')
+assert(pillSellPrice({ grade: 3, baseGrade: 1 }) === 70, '珍品回春丹卖价 = 3*20+1*10 = 70')
+assert(pillBuyPrice({ grade: 1, baseGrade: 1 }) === 60, '凡品回春丹买价 = 30*2 = 60')
+assert(codexPrice(RECIPES.pojing) === 250, '破镜丹打听价 = 5*50 = 250')
+
+console.log('【经济：买卖与入库】')
+globalThis.localStorage = { _d:{}, getItem(k){return this._d[k]??null}, setItem(k,v){this._d[k]=String(v)} }
+const { Game } = await import('./js/game.js')
+const g = new Game()
+g.coins = 100
+assert(g.buyMaterial('lingzhi').ok, '买灵芝成功')
+assert(g.count('lingzhi') === 6, '灵芝 +1（5→6）')
+assert(g.coins === 100 - 24, '金币扣除 24')
+assert(g.buyMaterial('longlin').ok === false, '龙鳞未解锁买不了')
+assert(g.sellMaterial('lingzhi').ok, '卖灵芝成功')
+assert(g.count('lingzhi') === 5, '灵芝 -1（6→5）')
+assert(g.coins === 100 - 24 + 12, '金币 +12')
+assert(g.buyPill('huichun').ok, '买回春丹成功')
+assert(g.pillCount(pillKey('huichun', 1)) === 1, '凡品回春丹入背包')
+assert(g.buyPill('pojing').ok === false, '金币不足买不了破镜丹')
+assert(g.sellPill(pillKey('huichun', 1)).ok, '卖回春丹成功')
+assert(g.pillCount(pillKey('huichun', 1)) === 0, '回春丹售出')
+g.coins = 500
+assert(g.buyCodex('mihun').ok, '打听迷魂丹丹方')
+assert(g.codex['mihun'] === true, '图鉴解锁迷魂丹')
+assert(g.buyCodex('mihun').ok === false, '重复打听被拒绝')
+
+console.log('【丹药入库】')
+globalThis.localStorage._d = {}
+const g2 = new Game()
+g2.selectMaterial('lingzhi'); g2.selectMaterial('zhushacao')
+g2.startRefining()
+g2.onJudgeClick(93); g2.onJudgeClick(93); g2.onJudgeClick(93)
+g2.settle()
+assert(g2.pillCount(pillKey('huichun', 3)) === 1, '珍品回春丹入背包（huichun@3）')
+globalThis.localStorage._d = {}
+const g3 = new Game()
+g3.selectMaterial('lingzhi'); g3.selectMaterial('mandala')
+g3.startRefining()
+g3.onJudgeClick(85); g3.onJudgeClick(85); g3.onJudgeClick(85)
+g3.settle()
+const randomKeys = Object.keys(g3.pills)
+assert(randomKeys.length === 1 && randomKeys[0].startsWith('random_dan@') || randomKeys[0].startsWith('huiqi_san@') || randomKeys[0].startsWith('ningshen_wan@'), '随机丹药入库（带品阶 key）')
 
 console.log(`\n结果：${pass} 通过 / ${fail} 失败`)
 process.exit(fail > 0 ? 1 : 0)

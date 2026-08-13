@@ -374,3 +374,113 @@ button { font-family: inherit; cursor: pointer; }
 .codex-grade.q4 { color: var(--q4); }
 .codex-grade.q5 { color: var(--q5); }
 .codex-mat { font-size: 0.75rem; color: var(--text-dim); }
+
+/* ============================================================
+   背包 / 商店 / 品级颜色（v0.2 新增）
+   ============================================================ */
+
+/* 素材品级色：tier 1~5 对应 q1~q5（与丹药同色系） */
+.material-btn.q1 { border-color: #3a3a3a; }
+.material-btn.q2 { border-color: #2d6b2a; }
+.material-btn.q3 { border-color: #2a4f8a; }
+.material-btn.q4 { border-color: #6b2d8a; }
+.material-btn.q5 { border-color: #8a6a1f; }
+.material-btn.q1 .material-name { color: #9ba1a8; }
+.material-btn.q2 .material-name { color: #5fa84e; }
+.material-btn.q3 .material-name { color: #4f7fd4; }
+.material-btn.q4 .material-name { color: #b04fc9; }
+.material-btn.q5 .material-name { color: #f0a020; }
+.material-btn.selected { border-color: var(--gold); box-shadow: 0 0 12px rgba(212, 169, 79, 0.25); }
+
+.selected-chip.q1 { border-color: #9ba1a8; }
+.selected-chip.q2 { border-color: #5fa84e; }
+.selected-chip.q3 { border-color: #4f7fd4; }
+.selected-chip.q4 { border-color: #b04fc9; }
+.selected-chip.q5 { border-color: #f0a020; }
+
+/* 品级文字色（丹药/背包条目共用） */
+.bag-name.q1, .bag-sub.q1 { color: var(--q1); }
+.bag-name.q2, .bag-sub.q2 { color: var(--q2); }
+.bag-name.q3, .bag-sub.q3 { color: var(--q3); }
+.bag-name.q4, .bag-sub.q4 { color: var(--q4); }
+.bag-name.q5, .bag-sub.q5 { color: var(--q5); }
+
+/* ---------- 弹窗面板 ---------- */
+.panel.codex { width: 100%; max-width: 480px; }
+.panel.shop { max-width: 520px; }
+
+.tabs { display: flex; gap: 8px; justify-content: center; }
+.tab-btn {
+  padding: 7px 18px;
+  background: var(--panel-light);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 0.92rem;
+  transition: all 0.15s;
+}
+.tab-btn.active {
+  color: var(--gold-bright);
+  border-color: var(--gold);
+  background: rgba(212, 169, 79, 0.1);
+}
+
+.tab-content { display: flex; flex-direction: column; gap: 8px; min-height: 120px; }
+.tab-content.hidden { display: none; }
+
+/* 背包/商店行 */
+.bag-row, .shop-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--panel-light);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+.bag-emoji { font-size: 22px; flex: 0 0 auto; }
+.bag-name { font-weight: bold; font-size: 0.95rem; flex: 0 0 auto; }
+.bag-sub { font-size: 0.8rem; color: var(--text-dim); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bag-count { font-size: 0.9rem; color: var(--gold); flex: 0 0 auto; }
+
+/* 商店 */
+.shop-section {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  margin: 8px 0 4px;
+  border-bottom: 1px dashed var(--border);
+  padding-bottom: 4px;
+}
+.shop-btns { display: flex; gap: 6px; flex: 0 0 auto; }
+.shop-btn {
+  padding: 5px 10px;
+  font-size: 0.8rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  transition: all 0.12s;
+}
+.shop-btn.buy { background: rgba(95, 168, 78, 0.15); color: #7cc06a; }
+.shop-btn.buy:hover { border-color: #5fa84e; }
+.shop-btn.sell { background: rgba(79, 127, 212, 0.15); color: #7fa8e8; }
+.shop-btn.sell:hover { border-color: #4f7fd4; }
+.shop-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.empty-hint { color: var(--text-dim); font-size: 0.88rem; text-align: center; padding: 18px 0; }
+
+/* toast 操作提示 */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(20, 13, 11, 0.95);
+  border: 1px solid var(--gold);
+  color: var(--gold-bright);
+  border-radius: 999px;
+  padding: 8px 20px;
+  font-size: 0.9rem;
+  z-index: 200;
+  animation: fade-in 0.15s ease-out;
+  pointer-events: none;
+}

@@ -3,10 +3,26 @@
 // Godot 移植：本文件由场景树 + Control 节点替代
 // ============================================================
 
-import { MATERIALS, RECIPES, JUDGE_STAGES, JUDGE_ZONES } from './data.js'
+import { MATERIALS, RECIPES, RANDOM_PILL_POOL, JUDGE_STAGES, JUDGE_ZONES } from './data.js'
 import { QUALITY_NAMES } from './judge.js'
+import { pillKey } from './game.js'
+import {
+  materialBuyPrice, materialSellPrice, pillBuyPrice, pillSellPrice, codexPrice,
+} from './economy.js'
 
 const $ = (sel, root = document) => root.querySelector(sel)
+
+/** 素材品阶 → 颜色类（与丹药品阶色共用 q1~q5） */
+const tierClass = (tier) => `q${Math.min(5, Math.max(1, tier))}`
+
+/** 轻提示（弹窗底部显示操作结果） */
+function toast(el, text) {
+  const t = document.createElement('div')
+  t.className = 'toast'
+  t.textContent = text
+  el.appendChild(t)
+  setTimeout(() => t.remove(), 1600)
+}
 
 export function initUI(game) {
   const app = $('#app')
@@ -20,9 +36,11 @@ export function initUI(game) {
     topbar.innerHTML = `
       <span class="topbar-item">💰 <b id="coin-amount">${game.coins}</b></span>
       <span class="topbar-item">图鉴 <b>${Object.keys(game.codex).length}/${Object.keys(RECIPES).length}</b></span>
-      <button class="topbar-btn" id="codex-btn">📜 图鉴</button>
+      <button class="topbar-btn" id="inventory-btn">🎒 背包</button>
+      <button class="topbar-btn" id="shop-btn">🏪 商店</button>
     `
-    $('#codex-btn').addEventListener('click', showCodex)
+    $('#inventory-btn').addEventListener('click', showInventory)
+    $('#shop-btn').addEventListener('click', showShop)
   }
 
   // ---------- 主界面 ----------
@@ -47,7 +65,7 @@ export function initUI(game) {
     materialBar.innerHTML = ''
     for (const m of materials) {
       const btn = document.createElement('button')
-      btn.className = 'material-btn' + (game.selected.includes(m.id) ? ' selected' : '')
+      btn.className = `material-btn ${tierClass(m.tier)}` + (game.selected.includes(m.id) ? ' selected' : '')
       btn.innerHTML = `<span class="material-emoji">${m.emoji}</span>
         <span class="material-name">${m.name}</span>
         <span class="material-count">×${game.count(m.id)}</span>`
@@ -78,7 +96,7 @@ export function initUI(game) {
     } else {
       selectedPanel.innerHTML = '<p class="selected-hint">已选：</p>' + sel.map(id => {
         const m = MATERIALS[id]
-        return `<span class="selected-chip" data-id="${id}">${m.emoji}${m.name}</span>`
+        return `<span class="selected-chip ${tierClass(m.tier)}" data-id="${id}">${m.emoji}${m.name}</span>`
       }).join('')
     }
     selectedPanel.querySelectorAll('.selected-chip').forEach(chip => {
@@ -108,7 +126,6 @@ export function initUI(game) {
   `
   app.appendChild(judgeView)
 
-  const judgeTrack = $('#judge-track')
   const judgePointer = $('#judge-pointer')
   const judgeBtn = $('#judge-btn')
   const judgeStatus = $('#judge-status')
@@ -163,8 +180,9 @@ export function initUI(game) {
         game.onJudgeClick(100, zoneOffset)
         return
       }
-      // 单向线性行进 + 视觉抖动 ±2（GDD §5.3）
-      currentPos = Math.min(100, Math.max(0, t * 100 + (Math.random() - 0.5) * 2))
+      // 单向线性行进 + 低频正弦扰动（周期约 3s、幅度 ±0.8，丝滑且略带不确定）
+      const wobble = Math.sin(now * 0.002) * 0.8
+      currentPos = Math.min(100, Math.max(0, t * 100 + wobble))
       judgePointer.style.left = `${currentPos}%`
       animId = requestAnimationFrame(tick)
     }
@@ -184,11 +202,7 @@ export function initUI(game) {
   game.on('stageResult', ({ fail, next }) => {
     judgeStatus.textContent = fail ? '❌ 失误！' : '✅ 不错！'
     setTimeout(() => {
-      if (next) {
-        startJudge(next)
-      } else {
-        // 结算由 settle 事件驱动
-      }
+      if (next) startJudge(next)
     }, 600)
   })
 
@@ -216,21 +230,20 @@ export function initUI(game) {
           <h2>${p.name}</h2>
           <div class="settle-quality ${qualityClass}">${p.quality}</div>
           <p class="settle-effect">${p.effect}</p>
-          <p class="settle-reward">💰 +${result.rewardCoins} 金币 · 返还素材 ×${result.rewardMaterials.length}</p>
+          <p class="settle-reward">🎒 已放入背包 · 💰 +${result.rewardCoins} 金币 · 返还素材 ×${result.rewardMaterials.length}</p>
           <button class="modal-btn" id="again-btn">再炼一炉</button>
-          <button class="modal-btn ghost" id="codex-btn2">📜 图鉴</button>
+          <button class="modal-btn ghost" id="bag-btn">🎒 背包</button>
         </div>`
     }
     overlay.innerHTML = content
-    document.body.appendChild(overlay)
     $('#again-btn', overlay)?.addEventListener('click', () => {
       overlay.remove()
       game.backToSelect()
     })
-    $('#codex-btn2', overlay)?.addEventListener('click', () => {
+    $('#bag-btn', overlay)?.addEventListener('click', () => {
       overlay.remove()
       game.backToSelect()
-      showCodex()
+      showInventory()
     })
   }
 
@@ -239,6 +252,236 @@ export function initUI(game) {
     mainView.classList.remove('hidden')
     setTimeout(() => showSettle(result), 700)
   })
+
+  // ---------- 背包 ----------
+  const showInventory = () => {
+    const overlay = document.createElement('div')
+    overlay.className = 'modal'
+    overlay.innerHTML = `
+      <div class="panel codex">
+        <h2>🎒 背包</h2>
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="mat">素材</button>
+          <button class="tab-btn" data-tab="pill">丹药</button>
+        </div>
+        <div class="tab-content" id="inv-mat"></div>
+        <div class="tab-content hidden" id="inv-pill"></div>
+        <button class="modal-btn" id="close-inv">关闭</button>
+      </div>`
+    document.body.appendChild(overlay)
+
+    const renderMat = () => {
+      const box = $('#inv-mat', overlay)
+      const items = Object.values(MATERIALS).filter(m => game.count(m.id) > 0)
+      box.innerHTML = items.length === 0
+        ? '<p class="empty-hint">背包空空如也，去炼药或逛商店吧</p>'
+        : items.map(m => `
+          <div class="bag-row">
+            <span class="bag-emoji">${m.emoji}</span>
+            <span class="bag-name ${tierClass(m.tier)}">${m.name}</span>
+            <span class="bag-sub">${m.desc}</span>
+            <span class="bag-count">×${game.count(m.id)}</span>
+          </div>`).join('')
+    }
+
+    const renderPill = () => {
+      const box = $('#inv-pill', overlay)
+      const keys = Object.keys(game.pills)
+      box.innerHTML = keys.length === 0
+        ? '<p class="empty-hint">还没有炼成任何丹药</p>'
+        : keys.map(key => {
+          const { id, grade } = game.parsePillKey(key)
+          const info = game.getPillBase(id)
+          return `
+          <div class="bag-row">
+            <span class="bag-emoji">${info.emoji}</span>
+            <span class="bag-name q${grade}">${info.name}</span>
+            <span class="bag-sub q${grade}">${QUALITY_NAMES[grade]}</span>
+            <span class="bag-count">×${game.pillCount(key)}</span>
+          </div>`
+        }).join('')
+    }
+
+    overlay.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        overlay.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn))
+        $('#inv-mat', overlay).classList.toggle('hidden', btn.dataset.tab !== 'mat')
+        $('#inv-pill', overlay).classList.toggle('hidden', btn.dataset.tab !== 'pill')
+      })
+    })
+    $('#close-inv', overlay).addEventListener('click', () => overlay.remove())
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove() })
+    renderMat()
+    renderPill()
+  }
+
+  // ---------- 商店 ----------
+  const showShop = () => {
+    const overlay = document.createElement('div')
+    overlay.className = 'modal'
+    overlay.innerHTML = `
+      <div class="panel codex shop">
+        <h2>🏪 丹坊 <span class="codex-count">💰 <b id="shop-coins">${game.coins}</b></span></h2>
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="mat">素材</button>
+          <button class="tab-btn" data-tab="pill">丹药</button>
+          <button class="tab-btn" data-tab="codex">图鉴</button>
+        </div>
+        <div class="tab-content" id="shop-mat"></div>
+        <div class="tab-content hidden" id="shop-pill"></div>
+        <div class="tab-content hidden" id="shop-codex"></div>
+        <button class="modal-btn" id="close-shop">关闭</button>
+      </div>`
+    document.body.appendChild(overlay)
+
+    const refreshCoins = () => { $('#shop-coins', overlay).textContent = game.coins }
+
+    const renderMat = () => {
+      const box = $('#shop-mat', overlay)
+      const materials = Object.values(MATERIALS)
+      box.innerHTML = materials.map(m => {
+        const unlocked = game.isUnlocked(m.id)
+        const buy = materialBuyPrice(m)
+        const sell = materialSellPrice(m)
+        return `
+        <div class="shop-row">
+          <span class="bag-emoji">${unlocked ? m.emoji : '🔒'}</span>
+          <span class="bag-name ${tierClass(m.tier)}">${unlocked ? m.name : '？？？'}</span>
+          <span class="bag-sub">持有×${game.count(m.id)}</span>
+          <div class="shop-btns">
+            <button class="shop-btn buy" data-act="buy" data-id="${m.id}" ${unlocked ? '' : 'disabled'}>买 ${buy}💰</button>
+            <button class="shop-btn sell" data-act="sell" data-id="${m.id}" ${game.count(m.id) > 0 ? '' : 'disabled'}>卖 ${sell}💰</button>
+          </div>
+        </div>`
+      }).join('')
+
+      box.querySelectorAll('.shop-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.dataset.id
+          const r = btn.dataset.act === 'buy'
+            ? game.buyMaterial(id)
+            : game.sellMaterial(id)
+          refreshCoins()
+          renderMat()
+          toast(overlay, r.ok ? (btn.dataset.act === 'buy' ? `购入 ${MATERIALS[id].name}` : `售出 ${MATERIALS[id].name}`) : `❌ ${r.reason}`)
+        })
+      })
+    }
+
+    const renderPill = () => {
+      const box = $('#shop-pill', overlay)
+      // 可购：配方丹 + 随机丹（基础品阶）
+      const buyable = [
+        ...Object.values(RECIPES),
+        ...RANDOM_PILL_POOL,
+      ]
+      const ownedKeys = Object.keys(game.pills)
+      const sellSection = ownedKeys.length > 0 ? `
+        <p class="shop-section">我的丹药（出售）</p>
+        ${ownedKeys.map(key => {
+          const { id, grade } = game.parsePillKey(key)
+          const info = game.getPillBase(id)
+          const sell = pillSellPrice({ grade, baseGrade: info.baseGrade })
+          return `
+          <div class="shop-row">
+            <span class="bag-emoji">${info.emoji}</span>
+            <span class="bag-name q${grade}">${info.name}</span>
+            <span class="bag-sub q${grade}">${QUALITY_NAMES[grade]} · ×${game.pillCount(key)}</span>
+            <div class="shop-btns">
+              <button class="shop-btn sell" data-key="${key}">卖 ${sell}💰</button>
+            </div>
+          </div>`
+        }).join('')}` : ''
+
+      const buySection = `
+        <p class="shop-section">丹药铺（购买 · 基础品阶）</p>
+        ${buyable.map(info => {
+          const grade = info.baseGrade
+          const buy = pillBuyPrice(info)
+          return `
+          <div class="shop-row">
+            <span class="bag-emoji">${info.emoji}</span>
+            <span class="bag-name q${grade}">${info.name}</span>
+            <span class="bag-sub q${grade}">${QUALITY_NAMES[grade]}</span>
+            <div class="shop-btns">
+              <button class="shop-btn buy" data-buy="${info.id}">买 ${buy}💰</button>
+            </div>
+          </div>`
+        }).join('')}`
+
+      box.innerHTML = `<div class="shop-pill-wrap">${sellSection || '<p class="empty-hint">背包里还没有丹药可出售</p>'}${buySection}</div>`
+
+      box.querySelectorAll('.shop-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (btn.dataset.key) {
+            const r = game.sellPill(btn.dataset.key)
+            refreshCoins()
+            renderPill()
+            toast(overlay, r.ok ? '售出丹药' : `❌ ${r.reason}`)
+          } else if (btn.dataset.buy) {
+            const r = game.buyPill(btn.dataset.buy)
+            refreshCoins()
+            renderPill()
+            toast(overlay, r.ok ? `购入 ${game.getPillBase(btn.dataset.buy).name}` : `❌ ${r.reason}`)
+          }
+        })
+      })
+    }
+
+    const renderCodex = () => {
+      const box = $('#shop-codex', overlay)
+      const unknown = Object.values(RECIPES).filter(r => !game.codex[r.id])
+      const known = Object.values(RECIPES).filter(r => game.codex[r.id])
+      box.innerHTML = `
+        ${unknown.length > 0 ? `
+        <p class="shop-section">未收录丹方（打听后永久解锁图鉴）</p>
+        ${unknown.map(r => {
+          const price = codexPrice(r)
+          return `
+          <div class="shop-row">
+            <span class="bag-emoji">❓</span>
+            <span class="bag-name">？？？</span>
+            <span class="bag-sub">传闻需 ${r.materials.map(id => MATERIALS[id].name).join('、')}</span>
+            <div class="shop-btns">
+              <button class="shop-btn buy" data-codex="${r.id}">打听 ${price}💰</button>
+            </div>
+          </div>`
+        }).join('')}` : '<p class="empty-hint">全部丹方已收录 ✨</p>'}
+        <p class="shop-section">已收录</p>
+        <div class="codex-grid">
+          ${known.map(r => `
+            <div class="codex-card q${r.grade}">
+              <div class="codex-emoji">${r.emoji}</div>
+              <div class="codex-name">${r.name}</div>
+              <div class="codex-grade q${r.grade}">${QUALITY_NAMES[r.grade]}</div>
+            </div>`).join('')}
+        </div>`
+
+      box.querySelectorAll('[data-codex]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const r = game.buyCodex(btn.dataset.codex)
+          refreshCoins()
+          renderCodex()
+          toast(overlay, r.ok ? `📜 打听到「${RECIPES[btn.dataset.codex].name}」丹方！` : `❌ ${r.reason}`)
+        })
+      })
+    }
+
+    overlay.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        overlay.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn))
+        const map = { mat: '#shop-mat', pill: '#shop-pill', codex: '#shop-codex' }
+        for (const [tab, sel] of Object.entries(map)) {
+          $(sel, overlay).classList.toggle('hidden', btn.dataset.tab !== tab)
+        }
+      })
+    })
+    $('#close-shop', overlay).addEventListener('click', () => overlay.remove())
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove() })
+    renderMat()
+    renderPill()
+    renderCodex()
+  }
 
   // ---------- 图鉴 ----------
   const showCodex = () => {
@@ -275,6 +518,12 @@ export function initUI(game) {
 
   // ---------- 状态刷新 ----------
   game.on('select', () => {
+    renderMaterialBar()
+    renderSelectedPanel()
+  })
+
+  game.on('inventory', () => {
+    renderTopbar()
     renderMaterialBar()
     renderSelectedPanel()
   })

@@ -90,6 +90,7 @@ export function resolveResult(materialIds, scores) {
         emoji: recipe.emoji,
         effect: recipe.effect,
         grade,
+        baseGrade: recipe.grade,
         quality: QUALITY_NAMES[grade],
         isRecipe: true,
       },
@@ -104,11 +105,12 @@ export function resolveResult(materialIds, scores) {
   return {
     success: true,
     pill: {
-      id: null,
+      id: pill.id,
       name: pill.name,
       emoji: pill.emoji,
       effect: pill.effect,
       grade,
+      baseGrade: pill.baseGrade,
       quality: QUALITY_NAMES[grade],
       isRecipe: false,
     },
