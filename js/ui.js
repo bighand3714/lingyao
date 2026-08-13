@@ -142,21 +142,29 @@ export function initUI(game) {
     judgeBtn.textContent = '点！'
     judgeBtn.disabled = false
 
-    // 灵气波动（5% 概率，区间偏移 ±10）
-    zoneOffset = Math.random() < 0.05 ? (Math.random() < 0.5 ? -10 : 10) : 0
+    // 灵气波动（5% 概率，区间偏移 ±5）
+    zoneOffset = Math.random() < 0.05 ? (Math.random() < 0.5 ? -5 : 5) : 0
     renderZones()
     if (zoneOffset !== 0) {
       judgeStatus.textContent = '⚡ 丹炉灵气波动！区间偏移！'
     }
 
-    const period = stage.period * 1000
+    // 指针从左到右单向行进，duration 秒走完全程（走到底即失败）
+    const duration = stage.duration * 1000
     const t0 = performance.now()
     cancelAnimationFrame(animId)
     const tick = (now) => {
-      const phase = ((now - t0) % period) / period
-      const base = phase < 0.5 ? phase * 200 : (1 - phase) * 200
-      // 视觉抖动 ±4（GDD §5.3）
-      currentPos = Math.min(100, Math.max(0, base + (Math.random() - 0.5) * 4))
+      const t = (now - t0) / duration
+      if (t >= 1) {
+        // 走到底还没点击 → 自动判失败
+        cancelAnimationFrame(animId)
+        judgeBtn.disabled = true
+        judgeStatus.textContent = '💨 时机已过！'
+        game.onJudgeClick(100, zoneOffset)
+        return
+      }
+      // 单向线性行进 + 视觉抖动 ±2（GDD §5.3）
+      currentPos = Math.min(100, Math.max(0, t * 100 + (Math.random() - 0.5) * 2))
       judgePointer.style.left = `${currentPos}%`
       animId = requestAnimationFrame(tick)
     }

@@ -115,23 +115,23 @@ export const RANDOM_PILL_POOL = [
 ]
 
 // ---------- 判定区间（0~100） ----------
-// 与 GDD §5.2 保持一致；调整这里即可调节难度
-// 当前为"最简单"档：完美区放宽，失误区收窄
+// 机制：指针单向从左走到右，判定区在最右侧，走到底（>96）即为失败
+// perfect/good/normal 嵌套：normal ⊃ good ⊃ perfect
 export const JUDGE_ZONES = {
-  perfect: { min: 46, max: 54 },   // 得分 3
-  good:    { min: 36, max: 64 },   // 得分 2
-  normal:  { min: 23, max: 77 },   // 得分 1
-  // 其余为失误，得分 0
+  perfect: { min: 90, max: 96 },   // 得分 3
+  good:    { min: 82, max: 96 },   // 得分 2
+  normal:  { min: 72, max: 96 },   // 得分 1
+  // <72 太早点击 / >96 走过头 → 失败，得分 0
 }
 
 export const JUDGE_SCORES = { perfect: 3, good: 2, normal: 1, fail: 0 }
 
-// 三段判定配置：投炉 / 控火 / 出锅 的摆动周期（秒，数值越大越慢）
-// 当前为"最简单"档：三段统一最慢速度
+// 三段判定配置：投炉 / 控火 / 出锅
+// 机制：指针从左到右单向行进，duration 为走完全程的秒数（三段一致 5 秒）
 export const JUDGE_STAGES = [
-  { id: 'throwing', name: '投炉时机', period: 2.0, hint: '何时将素材投入炉中？' },
-  { id: 'fire',     name: '控火时机', period: 2.0, hint: '火候到不到位？' },
-  { id: 'done',     name: '出锅时机', period: 2.0, hint: '丹成之际，把握时机！' },
+  { id: 'throwing', name: '投炉时机', duration: 5, hint: '指针走向右侧，金色处点下！' },
+  { id: 'fire',     name: '控火时机', duration: 5, hint: '火候将成，把握右侧时机！' },
+  { id: 'done',     name: '出锅时机', duration: 5, hint: '丹将出炉，最后一击！' },
 ]
 
 // 失误 ≥2 段即爆炉

@@ -13,14 +13,16 @@ function assert(cond, msg) {
   else { fail++; console.error(`  ✗ ${msg}`) }
 }
 
-console.log('【judgeScore 区间判定】')
-assert(judgeScore(50).level === 'perfect', 'pos=50 → perfect')
-assert(judgeScore(48).level === 'perfect', 'pos=48 → perfect（边界）')
-assert(judgeScore(40).level === 'good', 'pos=40 → good')
-assert(judgeScore(30).level === 'normal', 'pos=30 → normal')
-assert(judgeScore(10).level === 'fail', 'pos=10 → fail')
-assert(judgeScore(50, 10).level === 'good', 'pos=50 + 偏移10 → good（区间右移）')
-assert(judgeScore(60, 10).level === 'perfect', 'pos=60 + 偏移10 → perfect（补偿偏移）')
+console.log('【judgeScore 区间判定（单向行进，判定区在最右侧）】')
+assert(judgeScore(93).level === 'perfect', 'pos=93 → perfect')
+assert(judgeScore(90).level === 'perfect', 'pos=90 → perfect（边界）')
+assert(judgeScore(85).level === 'good', 'pos=85 → good')
+assert(judgeScore(75).level === 'normal', 'pos=75 → normal')
+assert(judgeScore(50).level === 'fail', 'pos=50 → fail（太早）')
+assert(judgeScore(98).level === 'fail', 'pos=98 → fail（走过头）')
+assert(judgeScore(100).level === 'fail', 'pos=100 → fail（走到底）')
+assert(judgeScore(95, 5).level === 'perfect', 'pos=95 + 偏移5 → perfect（区间右移）')
+assert(judgeScore(90, 5).level === 'good', 'pos=90 + 偏移5 → good（补偿偏移）')
 
 console.log('【matchRecipe 配方匹配（无序）】')
 assert(matchRecipe(['zhushacao', 'lingzhi'])?.id === 'huichun', '朱砂草+灵芝 → 回春丹')
