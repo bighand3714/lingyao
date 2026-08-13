@@ -406,7 +406,22 @@ button { font-family: inherit; cursor: pointer; }
 .bag-name.q5, .bag-sub.q5 { color: var(--q5); }
 
 /* ---------- 弹窗面板 ---------- */
-.panel.codex { width: 100%; max-width: 480px; }
+/* 纵向弹窗：面板在上、关闭按钮在面板外底部居中（不随内容滚动） */
+.modal.col {
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+}
+.modal.col .close-btn {
+  flex: 0 0 auto;
+  position: static;
+}
+.panel.codex {
+  width: 100%;
+  max-width: 480px;
+  max-height: 78dvh;
+  overflow-y: auto;
+}
 .panel.shop { max-width: 520px; }
 
 .tabs { display: flex; gap: 8px; justify-content: center; }

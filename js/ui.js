@@ -256,7 +256,7 @@ export function initUI(game) {
   // ---------- 背包 ----------
   const showInventory = () => {
     const overlay = document.createElement('div')
-    overlay.className = 'modal'
+    overlay.className = 'modal col'
     overlay.innerHTML = `
       <div class="panel codex">
         <h2>🎒 背包</h2>
@@ -266,8 +266,8 @@ export function initUI(game) {
         </div>
         <div class="tab-content" id="inv-mat"></div>
         <div class="tab-content hidden" id="inv-pill"></div>
-        <button class="modal-btn" id="close-inv">关闭</button>
-      </div>`
+      </div>
+      <button class="modal-btn close-btn" id="close-inv">关闭</button>`
     document.body.appendChild(overlay)
 
     const renderMat = () => {
@@ -318,7 +318,7 @@ export function initUI(game) {
   // ---------- 商店 ----------
   const showShop = () => {
     const overlay = document.createElement('div')
-    overlay.className = 'modal'
+    overlay.className = 'modal col'
     overlay.innerHTML = `
       <div class="panel codex shop">
         <h2>🏪 丹坊 <span class="codex-count">💰 <b id="shop-coins">${game.coins}</b></span></h2>
@@ -330,8 +330,8 @@ export function initUI(game) {
         <div class="tab-content" id="shop-mat"></div>
         <div class="tab-content hidden" id="shop-pill"></div>
         <div class="tab-content hidden" id="shop-codex"></div>
-        <button class="modal-btn" id="close-shop">关闭</button>
-      </div>`
+      </div>
+      <button class="modal-btn close-btn" id="close-shop">关闭</button>`
     document.body.appendChild(overlay)
 
     const refreshCoins = () => { $('#shop-coins', overlay).textContent = game.coins }
@@ -494,7 +494,7 @@ export function initUI(game) {
   // ---------- 图鉴 ----------
   const showCodex = () => {
     const overlay = document.createElement('div')
-    overlay.className = 'modal'
+    overlay.className = 'modal col'
     const known = Object.values(RECIPES).filter(r => game.codex[r.id])
     const unknown = Object.values(RECIPES).filter(r => !game.codex[r.id])
     overlay.innerHTML = `
@@ -515,8 +515,8 @@ export function initUI(game) {
               <div class="codex-mat">传闻需 ${r.materials.map(id => MATERIALS[id].name).join('、')}</div>
             </div>`).join('')}
         </div>
-        <button class="modal-btn" id="close-codex">关闭</button>
-      </div>`
+      </div>
+      <button class="modal-btn close-btn" id="close-codex">关闭</button>`
     document.body.appendChild(overlay)
     $('#close-codex', overlay).addEventListener('click', () => overlay.remove())
     overlay.addEventListener('click', (e) => {
