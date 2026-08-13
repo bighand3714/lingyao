@@ -236,6 +236,7 @@ export function initUI(game) {
         </div>`
     }
     overlay.innerHTML = content
+    document.body.appendChild(overlay)
     $('#again-btn', overlay)?.addEventListener('click', () => {
       overlay.remove()
       game.backToSelect()
@@ -250,6 +251,9 @@ export function initUI(game) {
   game.on('settle', (result) => {
     judgeView.classList.remove('active')
     mainView.classList.remove('hidden')
+    // 结算后同步背包/素材栏状态（弹窗期间界面保持正确）
+    renderMaterialBar()
+    renderSelectedPanel()
     setTimeout(() => showSettle(result), 700)
   })
 
