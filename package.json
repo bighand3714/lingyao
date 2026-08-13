@@ -1,0 +1,11 @@
+{
+  "name": "lingyao",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "炼丹小游戏（HTML 原型）—— 选素材、掐时机、炼成丹",
+  "scripts": {
+    "test": "node test.js",
+    "serve": "npx --yes serve ."
+  }
+}
