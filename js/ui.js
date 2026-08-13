@@ -67,15 +67,29 @@ export function initUI(game) {
     materialBar.innerHTML = ''
     for (const m of materials) {
       const chosen = game.selected.filter(x => x === m.id).length
+      const canAdd = chosen < game.count(m.id) && game.selected.length < 3
       const btn = document.createElement('button')
       btn.className = `material-btn ${tierClass(m.tier)}` + (chosen > 0 ? ' selected' : '')
-      btn.innerHTML = `<span class="material-emoji">${m.emoji}</span>
+      btn.innerHTML = `
+        <span class="material-emoji">${m.emoji}</span>
         <span class="material-name">${m.name}</span>
-        <span class="material-count">×${game.count(m.id)}${chosen > 0 ? ` · 已选${chosen}` : ''}</span>`
+        <span class="material-count">×${game.count(m.id)}${chosen > 0 ? ` · 已选${chosen}` : ''}</span>
+        <span class="mat-ctrl">
+          <span class="mat-step ${chosen > 0 ? '' : 'off'}" data-act="minus">−</span>
+          <span class="mat-step ${canAdd ? '' : 'off'}" data-act="plus">＋</span>
+        </span>`
       btn.title = m.desc
       btn.addEventListener('click', () => {
         if (game.selected.includes(m.id)) game.unselectMaterial(m.id)
         else game.selectMaterial(m.id)
+      })
+      btn.querySelector('[data-act="minus"]').addEventListener('click', (e) => {
+        e.stopPropagation()
+        if (game.selected.includes(m.id)) game.unselectMaterial(m.id)
+      })
+      btn.querySelector('[data-act="plus"]').addEventListener('click', (e) => {
+        e.stopPropagation()
+        game.selectMaterial(m.id)
       })
       materialBar.appendChild(btn)
     }

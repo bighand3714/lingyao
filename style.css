@@ -168,6 +168,24 @@ button { font-family: inherit; cursor: pointer; }
 .material-name { font-size: 0.82rem; }
 .material-count { font-size: 0.75rem; color: var(--text-dim); }
 
+/* 素材卡数量调整按钮 */
+.mat-ctrl { display: flex; gap: 4px; margin-top: 2px; }
+.mat-step {
+  width: 26px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.95rem;
+  line-height: 1;
+  color: var(--gold);
+  user-select: none;
+}
+.mat-step:active { background: var(--panel-light); }
+.mat-step.off { opacity: 0.3; pointer-events: none; }
+
 /* ---------- 已选与开炼 ---------- */
 .selected-panel { min-height: 34px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; }
 .selected-hint { color: var(--text-dim); font-size: 0.88rem; }
