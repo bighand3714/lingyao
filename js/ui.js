@@ -36,9 +36,11 @@ export function initUI(game) {
     topbar.innerHTML = `
       <span class="topbar-item">💰 <b id="coin-amount">${game.coins}</b></span>
       <span class="topbar-item">图鉴 <b>${Object.keys(game.codex).length}/${Object.keys(RECIPES).length}</b></span>
+      <button class="topbar-btn" id="codex-btn">📜 图鉴</button>
       <button class="topbar-btn" id="inventory-btn">🎒 背包</button>
       <button class="topbar-btn" id="shop-btn">🏪 商店</button>
     `
+    $('#codex-btn').addEventListener('click', showCodex)
     $('#inventory-btn').addEventListener('click', showInventory)
     $('#shop-btn').addEventListener('click', showShop)
   }
@@ -329,11 +331,9 @@ export function initUI(game) {
         <div class="tabs">
           <button class="tab-btn active" data-tab="mat">素材</button>
           <button class="tab-btn" data-tab="pill">丹药</button>
-          <button class="tab-btn" data-tab="codex">图鉴</button>
         </div>
         <div class="tab-content" id="shop-mat"></div>
         <div class="tab-content hidden" id="shop-pill"></div>
-        <div class="tab-content hidden" id="shop-codex"></div>
       </div>
       <button class="modal-btn close-btn" id="close-shop">关闭</button>`
     document.body.appendChild(overlay)
@@ -438,51 +438,10 @@ export function initUI(game) {
       })
     }
 
-    const renderCodex = () => {
-      const box = $('#shop-codex', overlay)
-      const unknown = Object.values(RECIPES).filter(r => !game.codex[r.id])
-      const known = Object.values(RECIPES).filter(r => game.codex[r.id])
-      box.innerHTML = `
-        ${unknown.length > 0 ? `
-        <p class="shop-section">未收录丹方（打听后永久解锁图鉴）</p>
-        ${unknown.map(r => {
-          const price = codexPrice(r)
-          return `
-          <div class="shop-row">
-            <div class="shop-info">
-              <span class="bag-emoji">❓</span>
-              <span class="bag-name">？？？</span>
-              <span class="bag-sub">传闻需 ${r.materials.map(id => MATERIALS[id].name).join('、')}</span>
-            </div>
-            <div class="shop-btns">
-              <button class="shop-btn buy" data-codex="${r.id}">打听 ${price}💰</button>
-            </div>
-          </div>`
-        }).join('')}` : '<p class="empty-hint">全部丹方已收录 ✨</p>'}
-        <p class="shop-section">已收录</p>
-        <div class="codex-grid">
-          ${known.map(r => `
-            <div class="codex-card q${r.grade}">
-              <div class="codex-emoji">${r.emoji}</div>
-              <div class="codex-name">${r.name}</div>
-              <div class="codex-grade q${r.grade}">${QUALITY_NAMES[r.grade]}</div>
-            </div>`).join('')}
-        </div>`
-
-      box.querySelectorAll('[data-codex]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const r = game.buyCodex(btn.dataset.codex)
-          refreshCoins()
-          renderCodex()
-          toast(overlay, r.ok ? `📜 打听到「${RECIPES[btn.dataset.codex].name}」丹方！` : `❌ ${r.reason}`)
-        })
-      })
-    }
-
     overlay.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         overlay.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn))
-        const map = { mat: '#shop-mat', pill: '#shop-pill', codex: '#shop-codex' }
+        const map = { mat: '#shop-mat', pill: '#shop-pill' }
         for (const [tab, sel] of Object.entries(map)) {
           $(sel, overlay).classList.toggle('hidden', btn.dataset.tab !== tab)
         }
@@ -492,16 +451,16 @@ export function initUI(game) {
     overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove() })
     renderMat()
     renderPill()
-    renderCodex()
   }
 
-  // ---------- 图鉴 ----------
+  // ---------- 图鉴（独立页面：查看 + 打听丹方） ----------
   const showCodex = () => {
     const overlay = document.createElement('div')
     overlay.className = 'modal col'
-    const known = Object.values(RECIPES).filter(r => game.codex[r.id])
-    const unknown = Object.values(RECIPES).filter(r => !game.codex[r.id])
-    overlay.innerHTML = `
+    const render = () => {
+      const known = Object.values(RECIPES).filter(r => game.codex[r.id])
+      const unknown = Object.values(RECIPES).filter(r => !game.codex[r.id])
+      overlay.innerHTML = `
       <div class="codex">
         <h2>📜 丹方图鉴 <span class="codex-count">${known.length}/${Object.keys(RECIPES).length}</span></h2>
         <div class="codex-grid">
@@ -517,15 +476,26 @@ export function initUI(game) {
               <div class="codex-emoji">❓</div>
               <div class="codex-name">？？？</div>
               <div class="codex-mat">传闻需 ${r.materials.map(id => MATERIALS[id].name).join('、')}</div>
+              <button class="shop-btn buy" data-codex="${r.id}">打听 ${codexPrice(r)}💰</button>
             </div>`).join('')}
         </div>
       </div>
       <button class="modal-btn close-btn" id="close-codex">关闭</button>`
+      overlay.querySelectorAll('[data-codex]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const r = game.buyCodex(btn.dataset.codex)
+          render()
+          renderTopbar()
+          toast(overlay, r.ok ? `📜 打听到「${RECIPES[btn.dataset.codex].name}」丹方！` : `❌ ${r.reason}`)
+        })
+      })
+      $('#close-codex', overlay).addEventListener('click', () => overlay.remove())
+    }
     document.body.appendChild(overlay)
-    $('#close-codex', overlay).addEventListener('click', () => overlay.remove())
     overlay.addEventListener('click', (e) => {
       if (e.target === overlay) overlay.remove()
     })
+    render()
   }
 
   // ---------- 状态刷新 ----------
