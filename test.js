@@ -15,16 +15,16 @@ function assert(cond, msg) {
   else { fail++; console.error(`  ✗ ${msg}`) }
 }
 
-console.log('【judgeScore 区间判定（单向行进，判定区在最右侧）】')
+console.log('【judgeScore 区间判定（单向行进，成功区 48~96）】')
 assert(judgeScore(93).level === 'perfect', 'pos=93 → perfect')
-assert(judgeScore(90).level === 'perfect', 'pos=90 → perfect（边界）')
-assert(judgeScore(85).level === 'good', 'pos=85 → good')
-assert(judgeScore(75).level === 'normal', 'pos=75 → normal')
-assert(judgeScore(50).level === 'fail', 'pos=50 → fail（太早）')
+assert(judgeScore(84).level === 'perfect', 'pos=84 → perfect（边界）')
+assert(judgeScore(80).level === 'good', 'pos=80 → good')
+assert(judgeScore(60).level === 'normal', 'pos=60 → normal')
+assert(judgeScore(40).level === 'fail', 'pos=40 → fail（太早）')
 assert(judgeScore(98).level === 'fail', 'pos=98 → fail（走过头）')
 assert(judgeScore(100).level === 'fail', 'pos=100 → fail（走到底）')
 assert(judgeScore(95, 5).level === 'perfect', 'pos=95 + 偏移5 → perfect（区间右移）')
-assert(judgeScore(90, 5).level === 'good', 'pos=90 + 偏移5 → good（补偿偏移）')
+assert(judgeScore(75, 5).level === 'good', 'pos=75 + 偏移5 → good（补偿偏移）')
 
 console.log('【matchRecipe 配方匹配（无序）】')
 assert(matchRecipe(['zhushacao', 'lingzhi'])?.id === 'huichun', '朱砂草+灵芝 → 回春丹')
@@ -46,6 +46,9 @@ assert(r.success, '1 段失误 → 仍成功')
 // 未命中配方 → 随机丹
 r = resolveResult(['lingzhi', 'mandala'], [2, 2, 2])
 assert(r.success && !r.pill.isRecipe, '未命中配方 → 随机丹药')
+// 重复素材配方：灵芝×2+朱砂草 → 培元丹
+r = resolveResult(['lingzhi', 'lingzhi', 'zhushacao'], [2, 2, 2])
+assert(r.success && r.pill.id === 'peiyuan', '灵芝×2+朱砂草 → 培元丹')
 // 品阶计算
 assert(calcGrade(3, [3, 3, 3]) === 3, 'avg=3 全完美 → 品阶3')
 assert(calcGrade(3, [1, 1, 1]) === 1, 'avg=3 全普通 → 品阶1')
@@ -103,6 +106,24 @@ g3.onJudgeClick(85); g3.onJudgeClick(85); g3.onJudgeClick(85)
 g3.settle()
 const randomKeys = Object.keys(g3.pills)
 assert(randomKeys.length === 1 && randomKeys[0].startsWith('random_dan@') || randomKeys[0].startsWith('huiqi_san@') || randomKeys[0].startsWith('ningshen_wan@'), '随机丹药入库（带品阶 key）')
+
+console.log('【重复素材选择】')
+globalThis.localStorage._d = {}
+const g4 = new Game()
+g4.selectMaterial('lingzhi')
+g4.selectMaterial('lingzhi')
+g4.selectMaterial('zhushacao')
+assert(g4.selected.length === 3, '同种素材可放多份（灵芝×2+朱砂草）')
+assert(g4.selected.filter(x => x === 'lingzhi').length === 2, '灵芝选中 2 份')
+g4.selectMaterial('lingzhi')
+assert(g4.selected.length === 3, '超过库存/上限被拒绝（最多 3 份）')
+g4.unselectMaterial('lingzhi')
+assert(g4.selected.filter(x => x === 'lingzhi').length === 1, '取消选中只移除一份')
+g4.selectMaterial('lingzhi')
+g4.startRefining()
+g4.onJudgeClick(93); g4.onJudgeClick(93); g4.onJudgeClick(93)
+g4.settle()
+assert(g4.pillCount(pillKey('peiyuan', 3)) === 1, '培元丹入库（灵芝×2+朱砂草，全完美→珍品）')
 
 console.log(`\n结果：${pass} 通过 / ${fail} 失败`)
 process.exit(fail > 0 ? 1 : 0)

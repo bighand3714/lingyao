@@ -66,11 +66,12 @@ export function initUI(game) {
     const materials = game.unlockedMaterials()
     materialBar.innerHTML = ''
     for (const m of materials) {
+      const chosen = game.selected.filter(x => x === m.id).length
       const btn = document.createElement('button')
-      btn.className = `material-btn ${tierClass(m.tier)}` + (game.selected.includes(m.id) ? ' selected' : '')
+      btn.className = `material-btn ${tierClass(m.tier)}` + (chosen > 0 ? ' selected' : '')
       btn.innerHTML = `<span class="material-emoji">${m.emoji}</span>
         <span class="material-name">${m.name}</span>
-        <span class="material-count">×${game.count(m.id)}</span>`
+        <span class="material-count">×${game.count(m.id)}${chosen > 0 ? ` · 已选${chosen}` : ''}</span>`
       btn.title = m.desc
       btn.addEventListener('click', () => {
         if (game.selected.includes(m.id)) game.unselectMaterial(m.id)

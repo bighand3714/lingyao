@@ -104,18 +104,21 @@ export class Game {
     return Object.values(MATERIALS).filter(m => this.isUnlocked(m.id))
   }
 
+  /** 选择素材（允许同种素材放多份，受库存限制；最多 3 份） */
   selectMaterial(id) {
     if (this.state !== 'selecting') return
-    if (this.selected.includes(id)) return
     if (this.selected.length >= 3) return
-    if (this.count(id) <= 0) return
+    const chosen = this.selected.filter(x => x === id).length
+    if (chosen >= this.count(id)) return
     this.selected.push(id)
     this.emit('select', { selected: [...this.selected] })
   }
 
+  /** 取消选中一份素材（同种多份时只移除一个） */
   unselectMaterial(id) {
     if (this.state !== 'selecting') return
-    this.selected = this.selected.filter(x => x !== id)
+    const idx = this.selected.indexOf(id)
+    if (idx >= 0) this.selected.splice(idx, 1)
     this.emit('select', { selected: [...this.selected] })
   }
 

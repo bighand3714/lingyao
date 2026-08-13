@@ -117,22 +117,22 @@ export const RANDOM_PILL_POOL = [
 
 // ---------- 判定区间（0~100） ----------
 // 机制：指针单向从左走到右，判定区在最右侧，走到底（>96）即为失败
-// perfect/good/normal 嵌套：normal ⊃ good ⊃ perfect
+// 成功区整体宽度翻倍（相对初版）：normal 24→48，good 14→28，perfect 6→12
 export const JUDGE_ZONES = {
-  perfect: { min: 90, max: 96 },   // 得分 3
-  good:    { min: 82, max: 96 },   // 得分 2
-  normal:  { min: 72, max: 96 },   // 得分 1
-  // <72 太早点击 / >96 走过头 → 失败，得分 0
+  perfect: { min: 84, max: 96 },   // 得分 3
+  good:    { min: 68, max: 96 },   // 得分 2
+  normal:  { min: 48, max: 96 },   // 得分 1
+  // <48 太早点击 / >96 走过头 → 失败，得分 0
 }
 
 export const JUDGE_SCORES = { perfect: 3, good: 2, normal: 1, fail: 0 }
 
 // 三段判定配置：投炉 / 控火 / 出锅
-// 机制：指针从左到右单向行进，duration 为走完全程的秒数（三段一致 5 秒）
+// 机制：指针从左到右单向行进，duration 为走完全程的秒数（三段一致 3 秒）
 export const JUDGE_STAGES = [
-  { id: 'throwing', name: '投炉时机', duration: 5, hint: '指针走向右侧，金色处点下！' },
-  { id: 'fire',     name: '控火时机', duration: 5, hint: '火候将成，把握右侧时机！' },
-  { id: 'done',     name: '出锅时机', duration: 5, hint: '丹将出炉，最后一击！' },
+  { id: 'throwing', name: '投炉时机', duration: 3, hint: '指针走向右侧，金色处点下！' },
+  { id: 'fire',     name: '控火时机', duration: 3, hint: '火候将成，把握右侧时机！' },
+  { id: 'done',     name: '出锅时机', duration: 3, hint: '丹将出炉，最后一击！' },
 ]
 
 // 失误 ≥2 段即爆炉
