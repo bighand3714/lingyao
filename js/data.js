@@ -116,20 +116,22 @@ export const RANDOM_PILL_POOL = [
 
 // ---------- 判定区间（0~100） ----------
 // 与 GDD §5.2 保持一致；调整这里即可调节难度
+// 当前为"最简单"档：完美区放宽，失误区收窄
 export const JUDGE_ZONES = {
-  perfect: { min: 48, max: 52 },   // 得分 3
-  good:    { min: 38, max: 62 },   // 得分 2
-  normal:  { min: 25, max: 75 },   // 得分 1
+  perfect: { min: 46, max: 54 },   // 得分 3
+  good:    { min: 36, max: 64 },   // 得分 2
+  normal:  { min: 23, max: 77 },   // 得分 1
   // 其余为失误，得分 0
 }
 
 export const JUDGE_SCORES = { perfect: 3, good: 2, normal: 1, fail: 0 }
 
 // 三段判定配置：投炉 / 控火 / 出锅 的摆动周期（秒，数值越大越慢）
+// 当前为"最简单"档：三段统一最慢速度
 export const JUDGE_STAGES = [
-  { id: 'throwing', name: '投炉时机', period: 1.2, hint: '何时将素材投入炉中？' },
-  { id: 'fire',     name: '控火时机', period: 0.85, hint: '火候到不到位？' },
-  { id: 'done',     name: '出锅时机', period: 0.65, hint: '丹成之际，把握时机！' },
+  { id: 'throwing', name: '投炉时机', period: 2.0, hint: '何时将素材投入炉中？' },
+  { id: 'fire',     name: '控火时机', period: 2.0, hint: '火候到不到位？' },
+  { id: 'done',     name: '出锅时机', period: 2.0, hint: '丹成之际，把握时机！' },
 ]
 
 // 失误 ≥2 段即爆炉

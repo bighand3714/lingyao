@@ -3,7 +3,7 @@
 // Godot 移植：本文件由场景树 + Control 节点替代
 // ============================================================
 
-import { MATERIALS, RECIPES, JUDGE_STAGES } from './data.js'
+import { MATERIALS, RECIPES, JUDGE_STAGES, JUDGE_ZONES } from './data.js'
 import { QUALITY_NAMES } from './judge.js'
 
 const $ = (sel, root = document) => root.querySelector(sel)
@@ -113,10 +113,11 @@ export function initUI(game) {
   const judgeBtn = $('#judge-btn')
   const judgeStatus = $('#judge-status')
 
+  // 判定区间视觉与 data.js JUDGE_ZONES 自动同步
   const ZONE_STYLES = {
-    outer:   { left: 25, width: 50 },
-    good:    { left: 38, width: 24 },
-    perfect: { left: 48, width: 4 },
+    outer:   { left: JUDGE_ZONES.normal.min, width: JUDGE_ZONES.normal.max - JUDGE_ZONES.normal.min },
+    good:    { left: JUDGE_ZONES.good.min, width: JUDGE_ZONES.good.max - JUDGE_ZONES.good.min },
+    perfect: { left: JUDGE_ZONES.perfect.min, width: JUDGE_ZONES.perfect.max - JUDGE_ZONES.perfect.min },
   }
 
   let animId = 0
